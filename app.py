@@ -9,7 +9,7 @@ import webbrowser
 import threading
 
 app = Flask(__name__)
-app.secret_key = 'zet-hier-een-sterke-geheime-sleutel'  # Nodig voor sessies
+app.secret_key = 'zet-hier-een-sterke-geheime-sleutel'  # Nodig voor sessions
 
 LOGIN_PAGE = """
 <!DOCTYPE html>
@@ -21,27 +21,27 @@ LOGIN_PAGE = """
     <style>
         body { background: #e0e7ef; font-family: 'Roboto', Arial, sans-serif; }
         .login-container {
-            max-width: 340px; margin: 120px auto; background: #fff; border-radius: 12px;
-            box-shadow: 0 4px 32px rgba(37,99,235,0.13); padding: 32px 28px 28px 28px; text-align: center;
+            max-width: 340px; margin: 80px auto; background: #fff; border-radius: 12px;
+            box-shadow: 0 4px 32px rgba(37,99,235,0.13); padding: 32px 28px 28px 28px;
         }
-        h2 { color: #2563eb; margin-bottom: 24px; }
-        input[type='password'] {
+        h2 { text-align: center; color: #2563eb; margin-bottom: 24px; }
+        input[type=password] {
             width: 100%; padding: 10px; border-radius: 6px; border: 1.5px solid #b0b8c1;
             font-size: 1.1rem; margin-bottom: 18px; transition: border 0.2s;
         }
-        input[type='password']:focus { border: 2px solid #2563eb; outline: none; }
+        input[type=password]:focus { border: 2px solid #2563eb; outline: none; }
         button {
-            background: linear-gradient(90deg, #2563eb 60%, #1d4ed8 100%);
-            color: #fff; border: none; border-radius: 6px; padding: 10px 22px; font-size: 1rem; font-weight: 700;
-            cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.08); transition: background 0.2s, transform 0.15s;
+            width: 100%; background: linear-gradient(90deg, #2563eb 60%, #1d4ed8 100%);
+            color: #fff; border: none; border-radius: 6px; padding: 10px 0; font-size: 1.1rem;
+            font-weight: 700; cursor: pointer; transition: background 0.2s;
         }
-        button:hover { background: linear-gradient(90deg, #1d4ed8 60%, #2563eb 100%); transform: translateY(-2px) scale(1.04); }
-        .msg { color: #d32f2f; margin-bottom: 10px; font-weight: 600; }
+        button:hover { background: linear-gradient(90deg, #1d4ed8 60%, #2563eb 100%); }
+        .msg { color: #d32f2f; text-align: center; margin-bottom: 10px; font-weight: 700; }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h2>Stamboom Feenstra</h2>
+        <h2>Stamboom Login</h2>
         {% if msg %}<div class="msg">{{ msg }}</div>{% endif %}
         <form method="post">
             <input type="password" name="password" placeholder="Wachtwoord" autofocus required>
@@ -962,27 +962,48 @@ class StamboomData:
 stamboom_data = StamboomData("stamboom_data.json")
 
 
-# Login vereist voor toegang tot de app
-@app.route('/', methods=['GET', 'POST'])
+# Login vereist voor alle routes behalve /login en static
+from functools import wraps
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login', next=request.path))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    msg = ''
+    if request.method == 'POST':
+        if request.form.get('password') == '160461':
+            session.permanent = False  # Session-cookie wordt niet opgeslagen na sluiten browser
+            session['logged_in'] = True
+            next_url = request.args.get('next') or url_for('home')
+            return redirect(next_url)
+        else:
+            msg = 'Wachtwoord onjuist!'
+    return render_template_string(LOGIN_PAGE, msg=msg)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/')
+@login_required
 def home():
-    if not session.get('logged_in'):
-        msg = ''
-        if request.method == 'POST':
-            if request.form.get('password') == '160461':
-                session['logged_in'] = True
-                return redirect(url_for('home'))
-            else:
-                msg = 'Wachtwoord onjuist!'
-        return render_template_string(LOGIN_PAGE, msg=msg)
     return render_template_string(HTML_PAGE)
 
 @app.route('/api/personen')
+@login_required
 def api_personen():
     # Reload data each time for demo; in production, cache or reload on change
     stamboom_data._laad_data_sync()
     return jsonify(stamboom_data.personen)
 
 @app.route('/api/add_person', methods=['POST'])
+@login_required
 def api_add_person():
     data = request.json
     if not data or not data.get('naam'):
@@ -1019,6 +1040,7 @@ def api_add_person():
     return new_person, 201
 
 @app.route('/api/link_child', methods=['POST'])
+@login_required
 def api_link_child():
     data = request.json
     ouder_id = data.get('ouder_id')
@@ -1051,6 +1073,7 @@ def api_link_child():
     return {'success': True}
 
 @app.route('/api/unlink_child', methods=['POST'])
+@login_required
 def api_unlink_child():
     data = request.json
     ouder_id = data.get('ouder_id')
@@ -1067,6 +1090,7 @@ def api_unlink_child():
     return {'success': True}
 
 @app.route('/api/update_person', methods=['POST'])
+@login_required
 def api_update_person():
     data = request.json
     person_id = data.get('id')
@@ -1084,6 +1108,7 @@ def api_update_person():
     return {'success': True, 'persoon': person}
 
 @app.route('/api/tree')
+@login_required
 def api_tree():
     stamboom_data._laad_data_sync()
     # Laad posities uit apart bestand
@@ -1117,6 +1142,7 @@ def api_tree():
     return jsonify(stamboom_data.personen)
 
 @app.route('/api/autosave', methods=['POST'])
+@login_required
 def api_autosave():
     stamboom_data._laad_data_sync()
     _save_stamboom_json(stamboom_data)
@@ -1124,6 +1150,7 @@ def api_autosave():
 
 # Voeg backend endpoint toe voor zoeken op naam
 @app.route('/api/search_person', methods=['GET'])
+@login_required
 def api_search_person():
     query = request.args.get('q', '').strip().lower()
     stamboom_data._laad_data_sync()
@@ -1133,6 +1160,7 @@ def api_search_person():
     return jsonify(results)
 
 @app.route('/api/save_position', methods=['POST'])
+@login_required
 def api_save_position():
     data = request.json
     person_id = data.get('id')
@@ -1161,6 +1189,7 @@ def open_browser():
 
 # Nieuw endpoint om alle posities op te slaan
 @app.route('/api/save_positions', methods=['POST'])
+@login_required
 def api_save_positions():
     data = request.json
     positions = data.get('positions', {})
