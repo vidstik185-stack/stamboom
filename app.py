@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, jsonify, request
+from flask import Flask, render_template_string, jsonify, request, session, redirect, url_for
 import os
 import datetime
 import re
@@ -9,6 +9,48 @@ import webbrowser
 import threading
 
 app = Flask(__name__)
+app.secret_key = 'zet-hier-een-sterke-geheime-sleutel'  # Nodig voor sessies
+
+LOGIN_PAGE = """
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <title>Login - Stamboom Feenstra</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap' rel='stylesheet'>
+    <style>
+        body { background: #e0e7ef; font-family: 'Roboto', Arial, sans-serif; }
+        .login-container {
+            max-width: 340px; margin: 120px auto; background: #fff; border-radius: 12px;
+            box-shadow: 0 4px 32px rgba(37,99,235,0.13); padding: 32px 28px 28px 28px; text-align: center;
+        }
+        h2 { color: #2563eb; margin-bottom: 24px; }
+        input[type='password'] {
+            width: 100%; padding: 10px; border-radius: 6px; border: 1.5px solid #b0b8c1;
+            font-size: 1.1rem; margin-bottom: 18px; transition: border 0.2s;
+        }
+        input[type='password']:focus { border: 2px solid #2563eb; outline: none; }
+        button {
+            background: linear-gradient(90deg, #2563eb 60%, #1d4ed8 100%);
+            color: #fff; border: none; border-radius: 6px; padding: 10px 22px; font-size: 1rem; font-weight: 700;
+            cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.08); transition: background 0.2s, transform 0.15s;
+        }
+        button:hover { background: linear-gradient(90deg, #1d4ed8 60%, #2563eb 100%); transform: translateY(-2px) scale(1.04); }
+        .msg { color: #d32f2f; margin-bottom: 10px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Stamboom Feenstra</h2>
+        {% if msg %}<div class="msg">{{ msg }}</div>{% endif %}
+        <form method="post">
+            <input type="password" name="password" placeholder="Wachtwoord" autofocus required>
+            <button type="submit">Inloggen</button>
+        </form>
+    </div>
+</body>
+</html>
+"""
 
 HTML_PAGE = """
 <!DOCTYPE html>
@@ -919,8 +961,19 @@ class StamboomData:
 
 stamboom_data = StamboomData("stamboom_data.json")
 
-@app.route('/')
+
+# Login vereist voor toegang tot de app
+@app.route('/', methods=['GET', 'POST'])
 def home():
+    if not session.get('logged_in'):
+        msg = ''
+        if request.method == 'POST':
+            if request.form.get('password') == '160461':
+                session['logged_in'] = True
+                return redirect(url_for('home'))
+            else:
+                msg = 'Wachtwoord onjuist!'
+        return render_template_string(LOGIN_PAGE, msg=msg)
     return render_template_string(HTML_PAGE)
 
 @app.route('/api/personen')
