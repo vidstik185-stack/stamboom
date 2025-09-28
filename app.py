@@ -315,6 +315,13 @@ HTML_PAGE = """
                         <button id="modal-remove-child-btn">Ontkoppel</button>
                     </label>
                 </div>
+                <hr>
+                <div style="margin-top:10px;">
+                    <label>Voeg nieuw kind toe:<br>
+                        <input type="text" id="modal-new-child-name" placeholder="Naam nieuw kind" style="margin-bottom:4px;">
+                        <button id="modal-new-child-btn">Voeg nieuw kind toe</button>
+                    </label>
+                </div>
             </div>
         </div>
     <script>
@@ -684,9 +691,28 @@ HTML_PAGE = """
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ouder_id, kind_id })
         }).then(r => r.json()).then(res => {
-            document.getElementById('msg').textContent = 'Kind gekoppeld aan ouder!';
-            fetchTreeAndRender();
-            setTimeout(()=>{document.getElementById('msg').textContent='';}, 2000);
+            // Zoek ouder en kind in personenlijst
+            const ouder = personen.find(p => p.id === ouder_id);
+            const kind = personen.find(p => p.id === kind_id);
+            if (ouder && kind) {
+                const spacing_y = 200;
+                const new_x = ouder.x || 0;
+                const new_y = (ouder.y || 0) + spacing_y;
+                // Verplaats kind direct onder ouder
+                fetch('/api/save_position', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: kind.id, x: new_x, y: new_y })
+                }).then(() => {
+                    document.getElementById('msg').textContent = 'Kind gekoppeld aan ouder!';
+                    fetchTreeAndRender();
+                    setTimeout(()=>{document.getElementById('msg').textContent='';}, 2000);
+                });
+            } else {
+                document.getElementById('msg').textContent = 'Kind gekoppeld aan ouder!';
+                fetchTreeAndRender();
+                setTimeout(()=>{document.getElementById('msg').textContent='';}, 2000);
+            }
         });
     };
             function openEditModal(persoon) {
@@ -731,7 +757,7 @@ HTML_PAGE = """
                 const modal = document.getElementById('edit-modal');
                 modal.style.display = 'flex';
                 setTimeout(()=>{ modal.classList.add('show'); }, 10);
-                // Voeg event listeners toe voor koppelen/ontkoppelen
+                // Voeg event listeners toe voor koppelen/ontkoppelen/nieuw kind
                 document.getElementById('modal-add-child-btn').onclick = function(e) {
                     e.preventDefault();
                     const kind_id = addSel.value;
@@ -741,10 +767,30 @@ HTML_PAGE = """
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ ouder_id: persoon.id, kind_id })
                     }).then(r => r.json()).then(res => {
-                        document.getElementById('msg').textContent = 'Kind gekoppeld!';
-                        closeEditModal();
-                        fetchTreeAndRender();
-                        setTimeout(()=>{document.getElementById('msg').textContent='';}, 2000);
+                        // Zoek ouder en kind in personenlijst
+                        const ouder = personen.find(p => p.id === persoon.id);
+                        const kind = personen.find(p => p.id === kind_id);
+                        if (ouder && kind) {
+                            const spacing_y = 200;
+                            const new_x = ouder.x || 0;
+                            const new_y = (ouder.y || 0) + spacing_y;
+                            // Verplaats kind direct onder ouder
+                            fetch('/api/save_position', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: kind.id, x: new_x, y: new_y })
+                            }).then(() => {
+                                document.getElementById('msg').textContent = 'Kind gekoppeld!';
+                                closeEditModal();
+                                fetchTreeAndRender();
+                                setTimeout(()=>{document.getElementById('msg').textContent='';}, 2000);
+                            });
+                        } else {
+                            document.getElementById('msg').textContent = 'Kind gekoppeld!';
+                            closeEditModal();
+                            fetchTreeAndRender();
+                            setTimeout(()=>{document.getElementById('msg').textContent='';}, 2000);
+                        }
                     });
                 };
                 document.getElementById('modal-remove-child-btn').onclick = function(e) {
@@ -760,6 +806,33 @@ HTML_PAGE = """
                         closeEditModal();
                         fetchTreeAndRender();
                         setTimeout(()=>{document.getElementById('msg').textContent='';}, 2000);
+                    });
+                };
+                document.getElementById('modal-new-child-btn').onclick = function(e) {
+                    e.preventDefault();
+                    const naam = document.getElementById('modal-new-child-name').value.trim();
+                    if (!naam) {
+                        document.getElementById('msg').textContent = 'Vul een naam in voor het nieuwe kind!';
+                        setTimeout(()=>{document.getElementById('msg').textContent='';}, 2000);
+                        return;
+                    }
+                    // Voeg nieuw kind toe met ouder_id
+                    fetch('/api/add_person', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ naam, ouder_id: persoon.id })
+                    }).then(r => r.json()).then(newPersoon => {
+                        // Koppel direct aan ouder
+                        fetch('/api/link_child', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ouder_id: persoon.id, kind_id: newPersoon.id })
+                        }).then(() => {
+                            document.getElementById('msg').textContent = 'Nieuw kind toegevoegd!';
+                            closeEditModal();
+                            fetchTreeAndRender();
+                            setTimeout(()=>{document.getElementById('msg').textContent='';}, 2000);
+                        });
                     });
                 };
             }
@@ -861,12 +934,20 @@ def api_add_person():
     data = request.json
     if not data or not data.get('naam'):
         return {'error': 'Naam is verplicht'}, 400
-    # Bepaal x/y zodat nieuwe personen niet op elkaar staan
+    # Plaats nieuwe blok onder de ouder (indien opgegeven)
     stamboom_data._laad_data_sync()
     existing = stamboom_data.personen
-    spacing = 200  # pixels tussen personen
-    base_y = 0
-    x = spacing * len(existing)
+    spacing_y = 200  # pixels tussen blokken verticaal
+    base_x = 0
+    ouder_id = data.get('ouder_id')
+    y = 0
+    if ouder_id:
+        ouder = next((p for p in existing if p['id'] == ouder_id), None)
+        if ouder:
+            y = ouder.get('y', 0) + spacing_y
+            base_x = ouder.get('x', 0)
+    else:
+        y = spacing_y * len(existing)
     new_person = {
         'id': str(uuid.uuid4()),
         'naam': data['naam'],
@@ -875,8 +956,8 @@ def api_add_person():
         'partnerschappen': [],
         'kinderen_ids': [],
         'bijzonderheden': data.get('bijzonderheden'),
-        'x': x,
-        'y': base_y
+        'x': base_x,
+        'y': y
     }
     stamboom_data._laad_data_sync();
     stamboom_data.personen.append(new_person)
@@ -893,11 +974,27 @@ def api_link_child():
         return {'error': 'ouder_id en kind_id zijn verplicht'}, 400
     stamboom_data._laad_data_sync()
     ouder = next((p for p in stamboom_data.personen if p['id'] == ouder_id), None)
+    kind = next((p for p in stamboom_data.personen if p['id'] == kind_id), None)
     if not ouder:
         return {'error': 'Ouder niet gevonden'}, 404
+    if not kind:
+        return {'error': 'Kind niet gevonden'}, 404
     if kind_id not in ouder['kinderen_ids']:
-        ouder['kinderen_ids'].append(kind_id);
+        ouder['kinderen_ids'].append(kind_id)
+        # Zet positie van kind direct onder ouder
+        spacing_y = 200
+        kind['x'] = ouder.get('x', 0)
+        kind['y'] = ouder.get('y', 0) + spacing_y
         _save_stamboom_json(stamboom_data)
+        # Sla ook posities op in stamboom_positions.json
+        pos_path = 'stamboom_positions.json'
+        positions = {}
+        if os.path.exists(pos_path):
+            with open(pos_path, 'r', encoding='utf-8') as f:
+                positions = json.load(f)
+        positions[kind_id] = {'x': kind['x'], 'y': kind['y']}
+        with open(pos_path, 'w', encoding='utf-8') as f:
+            json.dump(positions, f, ensure_ascii=False, indent=2)
     return {'success': True}
 
 @app.route('/api/unlink_child', methods=['POST'])

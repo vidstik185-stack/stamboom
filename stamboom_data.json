@@ -244,8 +244,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -51400,
-      "y": 450
+      "x": -48203,
+      "y": 55
     },
     {
       "id": "676aefc0-7586-4527-a37f-a7391cbc5a97",
@@ -277,7 +277,9 @@
       "geboortedatum": "1766-01-09",
       "overlijdensdatum": null,
       "partnerschappen": [],
-      "kinderen_ids": [],
+      "kinderen_ids": [
+        "decaf795-ba75-4b91-9c06-51418d53f928"
+      ],
       "bijzonderheden": null,
       "x": -52567,
       "y": 741
@@ -490,8 +492,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -47600,
-      "y": 450
+      "x": -47555,
+      "y": 206
     },
     {
       "id": "1a28c556-3a32-4f6c-9137-f9ef45d4329a",
@@ -501,8 +503,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -47400,
-      "y": 450
+      "x": -47598,
+      "y": 349
     },
     {
       "id": "e908d1c2-984a-4498-9951-d6717bc9146d",
@@ -534,8 +536,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -46800,
-      "y": 450
+      "x": -47537,
+      "y": 754
     },
     {
       "id": "e634cf47-5a4b-490a-8065-2e4fca9387ae",
@@ -545,8 +547,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -46600,
-      "y": 450
+      "x": -46935,
+      "y": 919
     },
     {
       "id": "b3cd8c9b-1ec8-4e15-85ca-631f115e2ff6",
@@ -556,8 +558,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": "Extra datum in partnerveld: 9/12/1834",
-      "x": -46400,
-      "y": 450
+      "x": -46512,
+      "y": 865
     },
     {
       "id": "ff19295d-ff10-4ef5-8b8b-7def71007735",
@@ -569,8 +571,8 @@
         "655ff3ad-f40f-4e01-824a-ec1fb0ba6dde"
       ],
       "bijzonderheden": null,
-      "x": -53089,
-      "y": 344
+      "x": -53101,
+      "y": 346
     },
     {
       "id": "decaf795-ba75-4b91-9c06-51418d53f928",
@@ -578,10 +580,12 @@
       "geboortedatum": "1791-06-13",
       "overlijdensdatum": "1791-06-17",
       "partnerschappen": [],
-      "kinderen_ids": [],
+      "kinderen_ids": [
+        "0339c0c2-fa02-4b41-b5ef-b824205c6443"
+      ],
       "bijzonderheden": null,
-      "x": -46200,
-      "y": 450
+      "x": -52324,
+      "y": 983
     },
     {
       "id": "50bc1b66-dab3-4ead-96bb-3792c9a08651",
@@ -591,8 +595,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -46000,
-      "y": 450
+      "x": -46138,
+      "y": 825
     },
     {
       "id": "70e63e88-2ffc-4194-b720-b72d68c94d81",
@@ -602,8 +606,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -45800,
-      "y": 450
+      "x": -46046,
+      "y": 919
     },
     {
       "id": "1c6ecc31-cbd4-4238-b0ab-d9da1e8103f6",
@@ -613,8 +617,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -45600,
-      "y": 450
+      "x": -52324,
+      "y": 1183
     },
     {
       "id": "61ae13ca-f70e-4545-8661-440fe4606e3f",
@@ -635,8 +639,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -45200,
-      "y": 450
+      "x": -45250,
+      "y": 548
     },
     {
       "id": "39ac3580-ca56-4f60-9ec7-456ea6412ae4",
@@ -866,8 +870,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -41000,
-      "y": 450
+      "x": -51894,
+      "y": 1417
     },
     {
       "id": "1bd417e9-4678-4ecb-8bdf-3c0c337f0706",
@@ -910,8 +914,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -40200,
-      "y": 450
+      "x": -52324,
+      "y": 1183
     },
     {
       "id": "a9bc3d57-97e9-48ba-943b-091a07771420",
@@ -965,8 +969,8 @@
       "partnerschappen": [],
       "kinderen_ids": [],
       "bijzonderheden": null,
-      "x": -39200,
-      "y": 450
+      "x": -39199,
+      "y": 216
     },
     {
       "id": "facfef82-53e0-464c-82e0-6f7c09a7976a",
@@ -1029,10 +1033,12 @@
       "geboortedatum": "1826-12-27",
       "overlijdensdatum": "1844-10-09",
       "partnerschappen": [],
-      "kinderen_ids": [],
+      "kinderen_ids": [
+        "e7db13f8-1fc3-4af2-971c-95dd07bc3bf9"
+      ],
       "bijzonderheden": null,
-      "x": -38000,
-      "y": 450
+      "x": -52129,
+      "y": 1211
     },
     {
       "id": "67fffc2f-0ea6-4546-ab0e-12dc05d960eb",
